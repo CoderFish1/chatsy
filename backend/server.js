@@ -2,7 +2,7 @@ import express from 'express';
 import { configDotenv } from 'dotenv';
 import { chats } from './data/data.js';
 
-const app = express()
+const app = express();
 configDotenv();
 
 app.get('/',(req,res) =>{
