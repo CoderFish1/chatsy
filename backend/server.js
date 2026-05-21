@@ -1,8 +1,12 @@
 import express from 'express';
+import cors from "cors";
 import { configDotenv } from 'dotenv';
 import { chats } from './data/data.js';
 
 const app = express();
+
+app.use(cors());
+
 configDotenv();
 
 app.get('/',(req,res) =>{
