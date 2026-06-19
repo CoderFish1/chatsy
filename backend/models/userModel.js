@@ -1,13 +1,13 @@
 import mongoose from "mongoose";
 
-const userSchema = mongoose.Schema(
+const userModel = mongoose.Schema(
   {
     name: { type: String, required: true },
     email: { type: String, required: true },
-    password: { type: String, requireds: true },
+    password: { type: String, required: true },
     pic: {
       type: String,
-      requireds: true,
+      required: true,
       default:
         "https://upload.wikimedia.org/wikipedia/commons/8/83/Default-Icon.jpg",
     },
