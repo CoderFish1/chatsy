@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { VStack, Box, Text, Input, Button } from "@chakra-ui/react";
-import { LuSquareTerminal } from "react-icons/lu";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { toaster } from "@/components/ui/toaster";
 
 const inputStyle = {
   bg: "#141414",
@@ -23,12 +25,60 @@ const labelStyle = {
   display: "block",
 };
 
-const submitHandler = () => {};
-
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState();
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
+
+  const submitHandler = async () => {
+    setLoading(true);
+
+    if (!email || !password) {
+      toaster.create({
+        title: "Please fill all the fields",
+        type: "warning",
+      });
+
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const config = {
+        headers: {
+          "Content-type": "application/json",
+        },
+      };
+
+      const { data } = await axios.post(
+        "/api/user/login",
+        {
+          email,
+          password,
+        },
+        config,
+      );
+
+      toaster.create({
+        title: "Login Successful",
+        type: "success",
+      });
+
+      localStorage.setItem("userInfo", JSON.stringify(data));
+
+      navigate("/chat");
+    } catch (error) {
+      toaster.create({
+        title: error.response?.data?.message || "Invalid Email or Password",
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <VStack gap={5} align="stretch" mt={2}>
@@ -49,15 +99,17 @@ const Login = () => {
         <Text as="label" {...labelStyle}>
           Password
         </Text>
+
         <Box position="relative">
           <Input
             value={password}
-            onChange={() => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             {...inputStyle}
             type={showPassword ? "text" : "password"}
             placeholder="••••••••"
             pr="50px"
           />
+
           <Text
             position="absolute"
             right="12px"
@@ -76,10 +128,11 @@ const Login = () => {
         </Box>
       </Box>
 
-      {/* Button Group */}
       <VStack gap={3} mt={2}>
         <Button
           onClick={submitHandler}
+          loading={loading}
+          loadingText="Logging In..."
           w="full"
           bg="white"
           color="black"
@@ -95,9 +148,20 @@ const Login = () => {
         </Button>
 
         <Button
-          onClick={() => {
+          onClick={async () => {
             setEmail("guest@example.com");
             setPassword("123456");
+            await axios
+              .post(
+                "/api/user/login",
+                { email: "guest@example.com", password: "123456" },
+                { headers: { "Content-type": "application/json" } },
+              )
+              .then(({ data }) => {
+                toaster.create({ title: "Login Successful through Guest account", type: "success" });
+                localStorage.setItem("userInfo", JSON.stringify(data));
+                navigate("/chat");
+              });
           }}
           w="full"
           bg="transparent"

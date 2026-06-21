@@ -1,5 +1,9 @@
 import React, { useState, useRef } from "react";
 import { VStack, Box, Text, Input, Button, Image } from "@chakra-ui/react";
+// Ensure <Toaster /> is rendered somewhere in your app's root level!
+import { toaster } from "@/components/ui/toaster";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const inputStyle = {
   bg: "#141414",
@@ -26,22 +30,132 @@ const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [picPreview, setPicPreview] = useState(null);
-  const fileRef = useRef();
 
-  const [name, setName] = useState();
-  const [email, setEmail] = useState();
-  const [password, setPassword] = useState();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pic, setPic] = useState(null);
 
-  
+  const [loading, setLoading] = useState(false);
+  const [picLoading, setPicLoading] = useState(false);
 
-  const submitHandler = () => {};
+  const fileRef = useRef(null);
+  const navigate = useNavigate();
 
-  const postDetails = () => {};
+  const submitHandler = async () => {
+    setLoading(true);
 
+    if (!name || !email || !password || !confirmPassword) {
+      toaster.create({
+        title: "Please fill all the fields",
+        type: "warning",
+      });
+      setLoading(false);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toaster.create({
+        title: "Passwords do not match",
+        type: "error",
+      });
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const config = {
+        headers: {
+          "Content-type": "application/json",
+        },
+      };
+
+      const { data } = await axios.post(
+        "/api/user/signup",
+        { name, email, password, pic },
+        config,
+      );
+      toaster.create({
+        title: "Registration Successful",
+        type: "success",
+      });
+
+      localStorage.setItem("userInfo", JSON.stringify(data));
+
+      setLoading(false);
+      navigate("/chat");
+    } catch (error) {
+      toaster.create({
+        title: "An error occurred",
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const postDetails = async (file) => {
+    if (!file) {
+      toaster.create({
+        title: "Please select an image!",
+        type: "error",
+      });
+      return;
+    }
+
+    if (file.size > 5000000) {
+      toaster.create({
+        title: "Image must be less than 5MB",
+        type: "error",
+      });
+      return;
+    }
+
+    if (file.type !== "image/jpeg" && file.type !== "image/png") {
+      toaster.create({
+        title: "Only JPG and PNG files are allowed",
+        type: "error",
+      });
+      return;
+    }
+
+    try {
+      setPicLoading(true);
+
+      const data = new FormData();
+      data.append("file", file);
+      data.append("upload_preset", "chat-app");
+      data.append("cloud_name", "dtysorjmu");
+
+      const response = await axios.post(
+        "https://api.cloudinary.com/v1_1/dtysorjmu/image/upload",
+        data,
+      );
+
+      console.log(response.data);
+
+      setPic(response.data.secure_url);
+      setPicPreview(response.data.secure_url);
+
+      toaster.create({
+        title: "Image uploaded successfully!",
+        type: "success",
+      });
+    } catch (error) {
+      console.log(error);
+      toaster.create({
+        title: "Image upload failed",
+        type: "error",
+      });
+    } finally {
+      setPicLoading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
 
   return (
     <VStack gap={4} align="stretch">
-      {/* Avatar row */}
       <Box display="flex" alignItems="center" gap={4} mb={2}>
         <Box
           w="56px"
@@ -60,8 +174,23 @@ const SignUp = () => {
           transition="all 0.2s"
           _hover={{ borderColor: "white" }}
         >
-          {picPreview ? (
-            <Image src={picPreview} w="100%" h="100%" objectFit="cover" />
+          {picLoading ? (
+            <Text
+              fontSize="8px"
+              color="gray.400"
+              fontWeight="700"
+              textAlign="center"
+            >
+              UPLOADING
+            </Text>
+          ) : picPreview ? (
+            <Image
+              src={picPreview}
+              w="100%"
+              h="100%"
+              objectFit="cover"
+              alt="Profile preview"
+            />
           ) : (
             <Text
               fontSize="9px"
@@ -83,14 +212,10 @@ const SignUp = () => {
         </Box>
         <input
           type="file"
-          accept="image/*"
+          accept="image/jpeg, image/png"
           ref={fileRef}
           style={{ display: "none" }}
-          onChange={(e) => {
-            postDetails(e.target.files[0]);
-            const file = e.target.files[0];
-            if (file) setPicPreview(URL.createObjectURL(file));
-          }}
+          onChange={(e) => postDetails(e.target.files[0])}
         />
       </Box>
 
@@ -99,7 +224,7 @@ const SignUp = () => {
           Name
         </Text>
         <Input
-          isRequired
+          required
           value={name}
           onChange={(e) => setName(e.target.value)}
           {...inputStyle}
@@ -113,7 +238,7 @@ const SignUp = () => {
           Email
         </Text>
         <Input
-          isRequired
+          required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           {...inputStyle}
@@ -128,8 +253,8 @@ const SignUp = () => {
         </Text>
         <Box position="relative">
           <Input
-          value={password}
-          onChange={()=> setPassword(e.target.value)}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             {...inputStyle}
             type={showPassword ? "text" : "password"}
             placeholder="••••••••"
@@ -159,6 +284,8 @@ const SignUp = () => {
         </Text>
         <Box position="relative">
           <Input
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             {...inputStyle}
             type={showConfirm ? "text" : "password"}
             placeholder="••••••••"
@@ -184,6 +311,8 @@ const SignUp = () => {
 
       <Button
         onClick={submitHandler}
+        loading={loading}
+        loadingText="Creating Account..."
         w="full"
         bg="white"
         color="black"

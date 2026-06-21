@@ -1,0 +1,68 @@
+// registeration and login logic here
+
+import expressAsyncHandler from "express-async-handler";
+import User from "../models/userModel.js";
+import generateToken from "../config/generateToken.js";
+
+// singup logic
+const registerUser = expressAsyncHandler(async (req, res) => {
+  const { name, email, password, pic } = req.body; //req.body is basically the data frontend(client) has sent to the backend
+
+  // check if user exists
+  // create user
+  // generate token
+  if (!name || !email || !password) {
+    res.status(400);
+    throw new Error("Please enter all the fields");
+  }
+
+  const userExists = await User.findOne({ email });
+
+  if (userExists) {
+    res.status(400);
+    throw new Error("User already Exists !!");
+  }
+
+  const user = await User.create({
+    name,
+    email,
+    password,
+    pic,
+  });
+
+  if (user) {
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      pic: user.pic,
+      token: generateToken(user._id),
+    });
+  } else {
+    res.status(400);
+    throw new Error("Failed to create the user");
+  }
+});
+
+// login logic
+const authUser = expressAsyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  const user = await User.findOne({ email });
+
+  if (user && (await user.matchPassword(password))) {
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      pic: user.pic,
+      token: generateToken(user._id),
+    });
+    return;
+  }
+
+  res.status(401);
+  throw new Error("Invalid email or password");
+});
+
+export { registerUser, authUser };
