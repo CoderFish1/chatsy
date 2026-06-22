@@ -1,12 +1,15 @@
 import express from "express";
-import { registerUser } from "../controllers/userControllers.js";
-import { authUser } from "../controllers/userControllers.js";
+import {
+  registerUser,
+  authUser,
+  allUsers,
+} from "../controllers/userControllers.js";
+import protect from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// router.route is another way of using this router funcationality, basically in this we chain the all the https methods(rest apis)
 router.route("/signup").post(registerUser);
+router.post("/login", authUser);
+router.get("/", protect, allUsers); // ← protect runs first, then allUsers(so basically when we make request protect verifies and doesnt shows us)
 
-router.post('/login', authUser)
-
-export default router
+export default router;

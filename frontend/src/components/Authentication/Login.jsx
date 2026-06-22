@@ -158,7 +158,10 @@ const Login = () => {
                 { headers: { "Content-type": "application/json" } },
               )
               .then(({ data }) => {
-                toaster.create({ title: "Login Successful through Guest account", type: "success" });
+                toaster.create({
+                  title: "Login Successful through Guest account",
+                  type: "success",
+                });
                 localStorage.setItem("userInfo", JSON.stringify(data));
                 navigate("/chat");
               });
