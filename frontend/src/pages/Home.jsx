@@ -1,9 +1,20 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Box, Text, Tabs } from "@chakra-ui/react";
 import Login from "@/components/Authentication/Login";
 import SignUp from "@/components/Authentication/SignUp";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("userInfo"));
+
+    if (user) {
+      navigate("/chats");
+    }
+  }, [navigate]);
+
   return (
     <Box
       w="100vw"

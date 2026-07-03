@@ -135,7 +135,7 @@ const renameGroup = expressAsyncHandler(async (req, res) => {
   res.json(updatedChat);
 });
 
-// for adding someone groupchat
+// for adding someone into groupchat
 const addFromGroup = expressAsyncHandler(async (req, res) => {
   const { chatId, userId } = req.body;
 
