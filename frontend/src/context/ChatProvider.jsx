@@ -11,7 +11,7 @@ const ChatProvider = ({ children }) => {
     setUser(userInfo);
 
     if(!userInfo){
-      nagivate('/');
+      navigate("/");
     }
   }, [navigate]);
   return (
