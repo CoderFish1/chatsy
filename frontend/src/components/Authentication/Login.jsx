@@ -69,7 +69,7 @@ const Login = () => {
 
       localStorage.setItem("userInfo", JSON.stringify(data));
 
-      navigate("/chat");
+      navigate("/chats");
     } catch (error) {
       toaster.create({
         title: error.response?.data?.message || "Invalid Email or Password",

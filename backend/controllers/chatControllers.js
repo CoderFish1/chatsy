@@ -12,7 +12,7 @@ const accessChat = expressAsyncHandler(async (req, res) => {
   }
 
   let isChat = await Chat.find({
-    isGroupChat: false,
+    isGroup: false,
     $and: [
       { users: { $elemMatch: { $eq: req.user._id } } },
       { users: { $elemMatch: { $eq: userId } } },
@@ -31,7 +31,7 @@ const accessChat = expressAsyncHandler(async (req, res) => {
   } else {
     const chatData = {
       chatName: "sender",
-      isGroupChat: false,
+      isGroup: false,
       users: [req.user._id, userId],
     };
 
@@ -96,7 +96,7 @@ const createGroupChat = expressAsyncHandler(async (req, res) => {
     const groupChat = await Chat.create({
       chatName: req.body.name,
       users: users,
-      isGroupChat: true,
+      isGroup: true,
       groupAdmin: req.user,
     });
 

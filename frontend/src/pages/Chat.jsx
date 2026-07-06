@@ -2,40 +2,40 @@ import { ChatState } from "@/context/ChatProvider";
 import SideDrawer from "@/components/miscellaneous/SideDrawer";
 import MyChats from "@/components/miscellaneous/MyChats";
 import ChatBox from "@/components/miscellaneous/ChatBox";
-import { Box } from "@chakra-ui/react"
+import { Box, Grid, GridItem } from "@chakra-ui/react";
 
 const Chat = () => {
+  const { user } = ChatState();
 
-  const {user} = ChatState()
   return (
-    <div style={{ width: "100%" }}>
+    <Box w="100vw" h="100vh" overflow="hidden">
       {user && <SideDrawer />}
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        w="100%"
-        h="91.5vh" // Ensure the container has height
-        p="10px"
-      >
-        {user && (
-          <Box w="30%">
-            {" "}
-            {/* Define width here */}
-            <MyChats />
-          </Box>
-        )}
-        {user && (
-          <Box w="68%">
-            {" "}
-            {/* Define width here */}
-            <ChatBox />
-          </Box>
-        )}
-      </Box>
-    </div>
+
+      {user && (
+        <Box
+          h={{ base: "calc(100vh - 60px)", md: "calc(100vh - 70px)" }}
+          p={{ base: 2, md: 4 }}
+        >
+          <Grid
+            h="100%"
+            templateColumns={{
+              base: "1fr",
+              md: "340px 1fr",
+            }}
+            gap={{ base: 2, md: 4 }}
+          >
+            <GridItem h="100%" minH={0} overflow="hidden">
+              <MyChats />
+            </GridItem>
+
+            <GridItem h="100%" minH={0} overflow="hidden">
+              <ChatBox />
+            </GridItem>
+          </Grid>
+        </Box>
+      )}
+    </Box>
   );
 };
 
 export default Chat;
-
-//restarting today after long break
