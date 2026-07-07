@@ -1,13 +1,112 @@
-import React from "react";
-import { Box, Text, Flex, IconButton, Input, Image } from "@chakra-ui/react";
+import React, { useEffect, useState } from "react";
+import {
+  Box,
+  Text,
+  Flex,
+  IconButton,
+  Input,
+  Image,
+  Spinner,
+} from "@chakra-ui/react";
+import { Send } from "lucide-react";
 import { ArrowLeft, Settings, Users } from "lucide-react";
 import { ChatState } from "../../context/ChatProvider";
 import { getSender, getSenderPic } from "../../config/ChatLogics";
 import ProfileModalBox from "./ProfileModalBox";
 import UpdateGroupChatModal from "./UpdateGroupChatModal";
+import ScrollableChat from "./ScrollableChat";
+import { toaster } from "../ui/toaster"; // Make sure this path is correct for your setup
+import axios from "axios";
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const { user, selectedChat, setSelectedChat } = ChatState();
+
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [newMessage, setNewMessage] = useState("");
+
+  const fetchMessages = async () => {
+    if (!selectedChat) return;
+
+    try {
+      const config = {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      };
+
+      setLoading(true);
+      const { data } = await axios.get(
+        `/api/message/${selectedChat._id}`,
+        config,
+      );
+
+      setMessages(data);
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      toaster.create({
+        title: "Error Occurred!",
+        description: "Failed to Load the Messages",
+        type: "error",
+        duration: 3000,
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchMessages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedChat]);
+
+  // core function that actually sends the data
+  const handleSendMessage = async () => {
+    if (!newMessage) return; // Don't send empty messages
+
+    try {
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+      };
+
+      // Clear input immediately for better UX
+      const messageToSend = newMessage;
+      setNewMessage("");
+
+      const { data } = await axios.post(
+        "/api/message",
+        {
+          content: messageToSend,
+          chatId: selectedChat._id,
+        },
+        config,
+      );
+
+      setMessages([...messages, data]);
+    } catch (error) {
+      toaster.create({
+        title: "Error Occurred!",
+        description: "Failed to send the Message",
+        type: "error",
+        duration: 3000,
+      });
+    }
+  };
+
+  //  The Keyboard Trigger
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault(); // Prevents default form submission behavior if applicable
+      handleSendMessage();
+    }
+  };
+
+  const typingHandler = (e) => {
+    setNewMessage(e.target.value);
+    // TODO: typing indicator logic
+  };
 
   return (
     <>
@@ -22,7 +121,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             justify="space-between"
             w="100%"
           >
-            {/* LEFT SIDE: Back Button + Pic + Chat Name */}
             <Flex align="center" gap={2}>
               <IconButton
                 display={{ base: "flex", md: "none" }}
@@ -44,11 +142,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                         getSender(user, selectedChat.users),
                       )}&background=random&color=fff`
                     }
-                    onError={(e) => {
-                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                        getSender(user, selectedChat.users),
-                      )}&background=random&color=fff`;
-                    }}
                     boxSize="36px"
                     borderRadius="full"
                     objectFit="cover"
@@ -83,11 +176,11 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
               )}
             </Flex>
 
-            {/* RIGHT SIDE: Group Settings Icon */}
             {selectedChat.isGroup && (
               <UpdateGroupChatModal
                 fetchAgain={fetchAgain}
                 setFetchAgain={setFetchAgain}
+                fetchMessages={fetchMessages}
               >
                 <IconButton
                   variant="ghost"
@@ -101,7 +194,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             )}
           </Flex>
 
-          {/* ---- MESSAGES AREA ---- */}
+          {/* ---- MESSAGES & INPUT AREA ---- */}
           <Box
             display="flex"
             flexDir="column"
@@ -111,17 +204,30 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             w="100%"
             h="100%"
             borderRadius="lg"
-            overflowY="hidden"
+            overflow="hidden"
           >
-            <Flex flexDir="column" overflowY="auto" h="100%">
-              <Text color="whiteAlpha.500" textAlign="center" mt={5}>
-                Start of your conversation
-              </Text>
-            </Flex>
+            {loading ? (
+              <Spinner
+                size="xl"
+                w={16}
+                h={16}
+                alignSelf="center"
+                margin="auto"
+                color="whiteAlpha.700"
+                thickness="4px"
+              />
+            ) : (
+              <Flex flexDir="column" overflowY="auto" h="100%" pb={2}>
+                <ScrollableChat messages={messages} />
+              </Flex>
+            )}
 
             {/* ---- INPUT FIELD ---- */}
-            <Box mt={3}>
+            <Box mt={3} position="relative" display="flex" alignItems="center">
               <Input
+                onKeyDown={handleKeyDown}
+                onChange={typingHandler}
+                value={newMessage}
                 variant="filled"
                 bg="rgba(255, 255, 255, 0.05)"
                 border="1px solid rgba(255, 255, 255, 0.1)"
@@ -132,26 +238,34 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                 }}
                 color="white"
                 placeholder="Type a message..."
+                pr="3rem"
               />
+              {/* Adds padding on the right so text doesn't hide behind the button */}
+
+              {/* The Send Button */}
+              <IconButton
+                position="absolute"
+                right="8px"
+                size="sm"
+                variant="ghost"
+                color="whiteAlpha.700"
+                _hover={{ bg: "whiteAlpha.200", color: "white" }}
+                onClick={handleSendMessage}
+                aria-label="Send message"
+                zIndex={2}
+                disabled={!newMessage}
+              >
+                {/* Triggered by mouse click */}
+                {/* Disables the button if input is empty */}
+                <Send size={18} />
+              </IconButton>
             </Box>
           </Box>
-                </Flex>
+        </Flex>
       ) : (
-        /* ---------------- EMPTY STATE ---------------- */
-        <Flex
-          h="100%"
-          w="100%"
-          justify="center"
-          align="center"
-          px={8}
-        >
-          <Flex
-            direction="column"
-            align="center"
-            justify="center"
-            gap={4}
-            textAlign="center"
-          >
+        <Flex h="100%" w="100%" justify="center" align="center" px={8}>
+          {/* Empty State remains the same */}
+          <Flex direction="column" align="center" gap={4} textAlign="center">
             <Box
               boxSize="72px"
               borderRadius="full"
@@ -163,22 +277,10 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             >
               <Users size={30} color="#A0AEC0" />
             </Box>
-
-            <Text
-              fontSize="2xl"
-              fontWeight="700"
-              color="white"
-              fontFamily="Plus Jakarta Sans, system-ui, sans-serif"
-            >
+            <Text fontSize="2xl" fontWeight="700" color="white">
               No Conversation Selected
             </Text>
-
-            <Text
-              color="whiteAlpha.600"
-              maxW="400px"
-              fontSize="md"
-              lineHeight="1.7"
-            >
+            <Text color="whiteAlpha.600" fontSize="md">
               Choose a conversation from the sidebar to start chatting.
             </Text>
           </Flex>

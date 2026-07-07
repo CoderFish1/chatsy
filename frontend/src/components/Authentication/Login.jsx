@@ -163,7 +163,7 @@ const Login = () => {
                   type: "success",
                 });
                 localStorage.setItem("userInfo", JSON.stringify(data));
-                navigate("/chat");
+                navigate("/chats");
               });
           }}
           w="full"

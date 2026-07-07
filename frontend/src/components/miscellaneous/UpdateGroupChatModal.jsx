@@ -17,7 +17,8 @@ import { toaster } from "../ui/toaster";
 import UserBadgeItem from "./UserBadge";
 import UserListItem from "./UserListItem";
 
-const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain, children }) => {
+
+const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain, children, fetchMessages }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [groupChatName, setGroupChatName] = useState("");
   const [search, setSearch] = useState("");
@@ -133,6 +134,7 @@ const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain, children }) => {
       user1._id === user._id ? setSelectedChat() : setSelectedChat(data);
 
       setFetchAgain(!fetchAgain);
+      fetchMessages()
       setLoading(false);
     } catch (error) {
       toaster.create({ title: "Failed to remove user", type: "error" });
