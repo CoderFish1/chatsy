@@ -6,11 +6,15 @@ import { ChatState } from "../../context/ChatProvider";
 import { toaster } from "../ui/toaster";
 import { getSender, getSenderPic } from "../../config/ChatLogics";
 import ChatLoading from "./ChatLoading";
+import GroupChatModal from "./GroupChatModal";
 
 const MyChats = () => {
   const [loggedUser, setLoggedUser] = useState();
 
   const { selectedChat, setSelectedChat, user, chats, setChats } = ChatState();
+
+  // for new group modal
+  const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
 
   const fetchChats = async () => {
     try {
@@ -69,6 +73,7 @@ const MyChats = () => {
         </Text>
 
         <Button
+          onClick={() => setIsGroupModalOpen(true)}
           size="sm"
           variant="ghost"
           color="white"
@@ -170,6 +175,11 @@ const MyChats = () => {
           <ChatLoading />
         )}
       </Box>
+      
+      <GroupChatModal
+        isOpen={isGroupModalOpen}
+        onClose={() => setIsGroupModalOpen(false)}
+      />
     </Box>
   );
 };
