@@ -8,7 +8,7 @@ import { getSender, getSenderPic } from "../../config/ChatLogics";
 import ChatLoading from "./ChatLoading";
 import GroupChatModal from "./GroupChatModal";
 
-const MyChats = () => {
+const MyChats = ({fetchAgain}) => {
   const [loggedUser, setLoggedUser] = useState();
 
   const { selectedChat, setSelectedChat, user, chats, setChats } = ChatState();
@@ -40,7 +40,7 @@ const MyChats = () => {
   useEffect(() => {
     setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
     fetchChats();
-  }, [user]);
+  }, [fetchAgain]);
 
   return (
     <Box
@@ -175,7 +175,7 @@ const MyChats = () => {
           <ChatLoading />
         )}
       </Box>
-      
+
       <GroupChatModal
         isOpen={isGroupModalOpen}
         onClose={() => setIsGroupModalOpen(false)}

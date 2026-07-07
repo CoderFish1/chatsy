@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Button, Text, Image } from "@chakra-ui/react";
+import { Box, Button, Text, Image, Portal } from "@chakra-ui/react";
 import { MenuRoot, MenuTrigger, MenuContent, MenuItem } from "@chakra-ui/react";
 import { Search, Bell, ChevronDown } from "lucide-react";
 import { ChatState } from "../../context/ChatProvider";
@@ -162,7 +162,7 @@ const SideDrawer = () => {
             size={{ base: "sm", md: "md" }}
             px={{ base: "2", md: "4" }}
           >
-            <Search size={{ base: 18, md: 20 }} />
+            <Search size={20} />
             <Text
               display={{ base: "none", sm: "none", md: "flex" }}
               px="4"
@@ -195,25 +195,21 @@ const SideDrawer = () => {
           gap={{ base: 2, sm: 3, md: 4 }}
         >
           {/* Notification Menu */}
-          <Box position="relative">
-            <MenuRoot>
-              <MenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  p={{ base: "6px", md: "1" }}
-                  color="white"
-                  _hover={{ bg: "whiteAlpha.200" }}
-                  size={{ base: "sm", md: "md" }}
-                >
-                  <Bell size={{ base: 18, md: 22 }} />
-                </Button>
-              </MenuTrigger>
+          <MenuRoot>
+            <MenuTrigger asChild>
+              <Button
+                variant="ghost"
+                p={{ base: "6px", md: "1" }}
+                color="white"
+                _hover={{ bg: "whiteAlpha.200" }}
+                size={{ base: "sm", md: "md" }}
+              >
+                <Bell size={20} />
+              </Button>
+            </MenuTrigger>
+            <Portal>
               <MenuContent
-                position="absolute"
-                top="100%"
-                right="0"
-                mt="2"
-                zIndex="1000"
+                zIndex="2000"
                 bg="rgba(15, 15, 15, 0.95)"
                 border="1px solid rgba(255, 255, 255, 0.1)"
                 borderRadius="md"
@@ -228,57 +224,52 @@ const SideDrawer = () => {
                   No new notifications
                 </MenuItem>
               </MenuContent>
-            </MenuRoot>
-          </Box>
+            </Portal>
+          </MenuRoot>
 
           {/* Profile Menu */}
-          <Box position="relative">
-            <MenuRoot>
-              <MenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  color="white"
-                  _hover={{ bg: "whiteAlpha.200" }}
-                  px={{ base: "1", md: "2" }}
-                  size={{ base: "sm", md: "md" }}
+          <MenuRoot>
+            <MenuTrigger asChild>
+              <Button
+                variant="ghost"
+                color="white"
+                _hover={{ bg: "whiteAlpha.200" }}
+                px={{ base: "1", md: "2" }}
+                size={{ base: "sm", md: "md" }}
+              >
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  gap={{ base: 1, md: 2 }}
                 >
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    gap={{ base: 1, md: 2 }}
-                  >
-                    <Image
-                      boxSize={{ base: "28px", md: "32px" }}
-                      borderRadius="full"
-                      src={
-                        user?.pic ||
-                        `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          user?.name || "User",
-                        )}&background=random&color=fff`
-                      }
-                      onError={(e) => {
-                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          user?.name || "User",
-                        )}&background=random&color=fff`;
-                      }}
-                      alt={user?.name || "Profile"}
-                      cursor="pointer"
-                      objectFit="cover"
-                      border="1px solid rgba(255,255,255,0.2)"
-                    />
-                    <ChevronDown
-                      size={{ base: 14, md: 16 }}
-                      display={{ base: "none", md: "block" }}
-                    />
+                  <Image
+                    boxSize={{ base: "28px", md: "32px" }}
+                    borderRadius="full"
+                    src={
+                      user?.pic ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        user?.name || "User",
+                      )}&background=random&color=fff`
+                    }
+                    onError={(e) => {
+                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        user?.name || "User",
+                      )}&background=random&color=fff`;
+                    }}
+                    alt={user?.name || "Profile"}
+                    cursor="pointer"
+                    objectFit="cover"
+                    border="1px solid rgba(255,255,255,0.2)"
+                  />
+                  <Box display={{ base: "none", md: "block" }}>
+                    <ChevronDown size={16} />
                   </Box>
-                </Button>
-              </MenuTrigger>
+                </Box>
+              </Button>
+            </MenuTrigger>
+            <Portal>
               <MenuContent
-                position="absolute"
-                top="100%"
-                right="0"
-                mt="2"
-                zIndex="1000" // Forces the menu to float above everything else
+                zIndex="2000"
                 bg="rgba(15, 15, 15, 0.95)"
                 backdropFilter="blur(10px)"
                 border="1px solid rgba(255, 255, 255, 0.1)"
@@ -310,8 +301,8 @@ const SideDrawer = () => {
                   Logout
                 </MenuItem>
               </MenuContent>
-            </MenuRoot>
-          </Box>
+            </Portal>
+          </MenuRoot>
         </Box>
       </Box>
 

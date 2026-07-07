@@ -1,11 +1,13 @@
+import React, { useState } from "react";
+import { Box, Grid, GridItem } from "@chakra-ui/react";
 import { ChatState } from "@/context/ChatProvider";
 import SideDrawer from "@/components/miscellaneous/SideDrawer";
 import MyChats from "@/components/miscellaneous/MyChats";
 import ChatBox from "@/components/miscellaneous/ChatBox";
-import { Box, Grid, GridItem } from "@chakra-ui/react";
 
 const Chat = () => {
-  const { user } = ChatState();
+  const { user, selectedChat } = ChatState(); // Pulled selectedChat for mobile logic
+  const [fetchAgain, setFetchAgain] = useState(false);
 
   return (
     <Box w="100vw" h="100vh" overflow="hidden">
@@ -24,12 +26,24 @@ const Chat = () => {
             }}
             gap={{ base: 2, md: 4 }}
           >
-            <GridItem h="100%" minH={0} overflow="hidden">
-              <MyChats />
+            {/* Show MyChats ONLY on mobile if no chat is selected. Always show on Desktop. */}
+            <GridItem
+              h="100%"
+              minH={0}
+              overflow="hidden"
+              display={{ base: selectedChat ? "none" : "block", md: "block" }}
+            >
+              <MyChats fetchAgain={fetchAgain} />
             </GridItem>
 
-            <GridItem h="100%" minH={0} overflow="hidden">
-              <ChatBox />
+            {/* Show ChatBox ONLY on mobile if a chat IS selected. Always show on Desktop. */}
+            <GridItem
+              h="100%"
+              minH={0}
+              overflow="hidden"
+              display={{ base: selectedChat ? "block" : "none", md: "block" }}
+            >
+              <ChatBox fetchAgain={fetchAgain} setFetchAgain={setFetchAgain} />
             </GridItem>
           </Grid>
         </Box>
