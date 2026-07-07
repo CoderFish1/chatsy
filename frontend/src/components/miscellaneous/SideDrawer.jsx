@@ -150,6 +150,8 @@ const SideDrawer = () => {
         backdropFilter="blur(12px)"
         borderBottom="1px solid rgba(255, 255, 255, 0.1)"
         color="white"
+        position="relative"
+        zIndex="9999"
       >
         {/* Left Column: Search */}
         <Box flex="1" display="flex" justifyContent="flex-start">
@@ -207,24 +209,25 @@ const SideDrawer = () => {
                 <Bell size={20} />
               </Button>
             </MenuTrigger>
-            <Portal>
-              <MenuContent
-                zIndex="2000"
-                bg="rgba(15, 15, 15, 0.95)"
-                border="1px solid rgba(255, 255, 255, 0.1)"
-                borderRadius="md"
-                boxShadow="dark-lg"
-                p={2}
+
+            <MenuContent
+              zIndex="2000"
+              bg="rgba(15, 15, 15, 0.95)"
+              border="1px solid rgba(255, 255, 255, 0.1)"
+              borderRadius="md"
+              boxShadow="dark-lg"
+              p={2}
+              position="absolute"
+              top="100%"
+            >
+              <MenuItem
+                value="empty"
+                _hover={{ bg: "whiteAlpha.200" }}
+                cursor="pointer"
               >
-                <MenuItem
-                  value="empty"
-                  _hover={{ bg: "whiteAlpha.200" }}
-                  cursor="pointer"
-                >
-                  No new notifications
-                </MenuItem>
-              </MenuContent>
-            </Portal>
+                No new notifications
+              </MenuItem>
+            </MenuContent>
           </MenuRoot>
 
           {/* Profile Menu */}
@@ -267,41 +270,42 @@ const SideDrawer = () => {
                 </Box>
               </Button>
             </MenuTrigger>
-            <Portal>
-              <MenuContent
-                zIndex="2000"
-                bg="rgba(15, 15, 15, 0.95)"
-                backdropFilter="blur(10px)"
-                border="1px solid rgba(255, 255, 255, 0.1)"
-                borderRadius="md"
-                boxShadow="dark-lg"
-                minW="150px"
-                p={1}
+
+            <MenuContent
+              zIndex="2000"
+              bg="rgba(15, 15, 15, 0.95)"
+              backdropFilter="blur(10px)"
+              border="1px solid rgba(255, 255, 255, 0.1)"
+              borderRadius="md"
+              boxShadow="dark-lg"
+              minW="150px"
+              p={1}
+              position="absolute"
+              top="100%"
+            >
+              <MenuItem
+                onClick={() => setIsProfileOpen(true)}
+                value="profile"
+                _hover={{ bg: "whiteAlpha.200" }}
+                px={3}
+                py={2}
+                cursor="pointer"
+                borderRadius="sm"
               >
-                <MenuItem
-                  onClick={() => setIsProfileOpen(true)}
-                  value="profile"
-                  _hover={{ bg: "whiteAlpha.200" }}
-                  px={3}
-                  py={2}
-                  cursor="pointer"
-                  borderRadius="sm"
-                >
-                  My Profile
-                </MenuItem>
-                <MenuItem
-                  value="logout"
-                  onClick={logoutHandler}
-                  _hover={{ bg: "red.500", color: "white" }}
-                  px={3}
-                  py={2}
-                  cursor="pointer"
-                  borderRadius="sm"
-                >
-                  Logout
-                </MenuItem>
-              </MenuContent>
-            </Portal>
+                My Profile
+              </MenuItem>
+              <MenuItem
+                value="logout"
+                onClick={logoutHandler}
+                _hover={{ bg: "red.500", color: "white" }}
+                px={3}
+                py={2}
+                cursor="pointer"
+                borderRadius="sm"
+              >
+                Logout
+              </MenuItem>
+            </MenuContent>
           </MenuRoot>
         </Box>
       </Box>

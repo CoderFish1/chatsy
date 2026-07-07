@@ -44,6 +44,7 @@ const MyChats = ({fetchAgain}) => {
 
   return (
     <Box
+      zIndex={0}
       display={{
         base: selectedChat ? "none" : "flex",
         md: "flex",

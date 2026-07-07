@@ -5,6 +5,7 @@ import SingleChat from "./SingleChat";
 const ChatBox = ({ fetchAgain, setFetchAgain }) => {
   return (
     <Box
+      zIndex={0}
       display="flex"
       flexDir="column"
       bg="rgba(15, 15, 15, 0.95)"
