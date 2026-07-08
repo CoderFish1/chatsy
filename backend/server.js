@@ -3,49 +3,86 @@ dotenv.config();
 
 import express from "express";
 import cors from "cors";
-import dns from "node:dns"; // <--: Import DNS module(nodejs inbuilt dns manager)
+import dns from "node:dns";
 
-// Force Google DNS to bypass ISP blocking
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
-import { chats } from "./data/data.js";
 import connectDB from "./config/db.js";
 import colors from "colors";
-import userRoutes from "./routes/userRoutes.js"
-import chatRoutes from "./routes/chatRoutes.js"
+import userRoutes from "./routes/userRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
+import { Server } from "socket.io";
 
- 
 const app = express();
 
 app.use(cors());
-   
+
 connectDB();
 
-app.use(express.json()) // middleware to accept json data
+app.use(express.json());
 
 app.get("/", (req, res) => {
   res.send("API is Running");
 });
 
-// app.get("/api/chat", (req, res) => {
-//   res.send(chats); 
-// });
+app.use("/api/user", userRoutes); 
+app.use("/api/chat", chatRoutes);
+app.use("/api/message", messageRoutes);
 
-// app.get("/api/chat/:id", (req, res) => {
-//   // console.log(req.params.id)
-//   const singleChat = chats.find((c) => c._id === req.params.id);
-//   res.send(singleChat);
-// });
-
-app.use('/api/user',userRoutes);
-app.use('/api/chat',chatRoutes);
-app.use('/api/message',messageRoutes);
-
-app.use(notFound)
-app.use(errorHandler)
+app.use(notFound);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, console.log(`Server started on PORT ${PORT}`.yellow.bold));
+const server = app.listen(
+  PORT,
+  console.log(`Server started on PORT ${PORT}`.yellow.bold),
+);
+
+const io = new Server(server, {
+  pingTimeout: 60000,
+  cors: {
+    origin: "http://localhost:5173",
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("A user connected to socket.io");
+
+  socket.on("setup", (userData) => {
+    socket.join(userData._id);
+    console.log("User Setup: ", userData._id);
+    socket.emit("connected");
+  });
+
+  socket.on("join chat", (room) => {
+    socket.join(room);
+    console.log("User Joined room : " + room);
+  });
+
+  socket.on("typing", (room) => socket.in(room).emit("typing"));
+  socket.on("stop typing", (room) => socket.in(room).emit("stop typing"));
+
+  // FIX: Standardized to "new message"
+  socket.on("new message", (newMessageReceived) => {
+    let chat = newMessageReceived.chat;
+
+    // FIX: Check for chat.users, not chat.user
+    if (!chat || !chat.users) return console.log("chat.users not defined");
+
+    // FIX: Removed .array (it's already an array)
+    chat.users.forEach((user) => {
+      if (user._id === newMessageReceived.sender._id) return;
+
+      socket.in(user._id).emit("message received", newMessageReceived);
+    });
+  });
+
+  // FIX: Handle disconnect properly at the root connection level
+  socket.on("disconnect", () => {
+    console.log("User disconnected");
+    // Socket.io automatically handles leaving rooms on disconnect
+  });
+});
