@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import ScrollableFeed from "react-scrollable-feed";
 import { Image } from "@chakra-ui/react";
 import {
@@ -9,8 +9,20 @@ import {
 } from "../../config/ChatLogics";
 import { ChatState } from "../../context/ChatProvider";
 
+const formatTime = (timestamp) => {
+  return new Date(timestamp).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 const ScrollableChat = ({ messages }) => {
   const { user } = ChatState();
+  const bottomRef = useRef();
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   return (
     <ScrollableFeed>
@@ -42,7 +54,7 @@ const ScrollableChat = ({ messages }) => {
             <span
               style={{
                 backgroundColor:
-                  m.sender._id === user._id ? "#0284c7" : "#27272a", // Blue for user, dark gray for sender
+                  m.sender._id === user._id ? "#0284c7" : "#27272a",
                 color: "white",
                 borderRadius: "18px",
                 padding: "8px 16px",
@@ -51,13 +63,25 @@ const ScrollableChat = ({ messages }) => {
                 lineHeight: "1.4",
                 border: "1px solid rgba(255,255,255,0.05)",
                 marginLeft: isSameSenderMargin(messages, m, i, user._id),
-                marginTop: isSameUser(messages, m, i) ? 4 : 12, // More space if it's a new sender
+                marginTop: isSameUser(messages, m, i) ? 4 : 12,
               }}
             >
               {m.content}
+              <span
+                style={{
+                  fontSize: "9px",
+                  color: "rgba(255,255,255,0.45)",
+                  marginLeft: "8px",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {formatTime(m.createdAt)}
+                {m.sender._id === user._id && " ✓"}
+              </span>
             </span>
           </div>
         ))}
+      <div ref={bottomRef} />
     </ScrollableFeed>
   );
 };

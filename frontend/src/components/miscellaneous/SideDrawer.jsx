@@ -1,16 +1,24 @@
 import React, { useState } from "react";
-import { Box, Button, Text, Image, Portal } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Text,
+  Image,
+  Flex,
+  IconButton,
+  Input,
+  Spinner,
+} from "@chakra-ui/react";
 import { MenuRoot, MenuTrigger, MenuContent, MenuItem } from "@chakra-ui/react";
-import { Search, Bell, ChevronDown } from "lucide-react";
+import { Search, Bell, ChevronDown, X, Users } from "lucide-react";
 import { ChatState } from "../../context/ChatProvider";
 import ProfileModalBox from "./ProfileModalBox";
 import { useNavigate } from "react-router-dom";
-import { Input } from "@chakra-ui/react";
 import { toaster } from "../ui/toaster";
-import { Spinner } from "@chakra-ui/react";
 import ChatLoading from "./ChatLoading";
 import UserListItem from "./UserListItem";
 import axios from "axios";
+import { getSender, getSenderPic } from "../../config/ChatLogics";
 
 // drawer components
 import {
@@ -22,23 +30,26 @@ import {
   DrawerBody,
   DrawerCloseTrigger,
 } from "../ui/drawer";
+
 const SideDrawer = () => {
-  // YOUR STATES - 100% UNTOUCHED
   const [search, setSearch] = useState("");
   const [searchResult, setSearchResult] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingChat, setLoadingChat] = useState();
 
-  const { user, setSelectedChat, chats, setChats } = ChatState(); // gets the user info from contextapi (usercontext) using localStorage
+  const {
+    user,
+    setSelectedChat,
+    chats,
+    setChats,
+    notification,
+    setNotification,
+  } = ChatState();
 
-  // state of drawer opening and closing
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  // state for profilemodal
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-
   const navigate = useNavigate();
 
-  // logout functionality
   const logoutHandler = () => {
     localStorage.removeItem("userInfo");
     navigate("/");
@@ -46,7 +57,6 @@ const SideDrawer = () => {
 
   const handleSearch = async () => {
     if (!search) {
-      // throws toast
       toaster.create({
         title: "Empty Search",
         description: "Please enter a name or email to search.",
@@ -55,7 +65,7 @@ const SideDrawer = () => {
       });
       return;
     }
-    // api call for searching they user
+
     const startTime = Date.now();
     try {
       setLoading(true);
@@ -67,7 +77,6 @@ const SideDrawer = () => {
       };
 
       const { data } = await axios.get(`/api/user?search=${search}`, config);
-
       setSearchResult(data);
 
       const elapsed = Date.now() - startTime;
@@ -75,7 +84,6 @@ const SideDrawer = () => {
       const remaining = Math.max(minDelay - elapsed, 0);
       setTimeout(() => setLoading(false), remaining);
     } catch (error) {
-      // failure toast
       setLoading(false);
       toaster.create({
         title: "Search Failed",
@@ -87,9 +95,8 @@ const SideDrawer = () => {
     }
   };
 
-  // for accessing or chat creation function
   const accessChat = async (userId) => {
-    if (loadingChat) return; // prevents double-fire from rapid clicks
+    if (loadingChat) return;
 
     try {
       setLoadingChat(true);
@@ -101,15 +108,12 @@ const SideDrawer = () => {
         },
       };
 
-      // sending the clicked user to backend to access/create the chat
       const { data } = await axios.post("/api/chat", { userId }, config);
-
       const chatExists = chats.find((c) => c._id === data._id);
 
       if (!chatExists) {
         setChats([data, ...chats]);
       } else {
-        // chat already exists, notify user instead of adding duplicate
         toaster.create({
           title: "Chat already exists",
           description: "You already have a conversation with this user.",
@@ -118,13 +122,8 @@ const SideDrawer = () => {
         });
       }
 
-      // setting the new chat as active one on screen
       setSelectedChat(data);
-
-      // closing the side drawer
       setLoadingChat(false);
-
-      // closing the side drawer
       setIsSearchOpen(false);
     } catch (error) {
       setLoadingChat(false);
@@ -196,41 +195,171 @@ const SideDrawer = () => {
           alignItems="center"
           gap={{ base: 2, sm: 3, md: 4 }}
         >
-          {/* Notification Menu */}
+          {/* ---- NOTIFICATION MENU ---- */}
           <MenuRoot>
             <MenuTrigger asChild>
               <Button
                 variant="ghost"
                 p={{ base: "6px", md: "1" }}
                 color="white"
+                position="relative"
                 _hover={{ bg: "whiteAlpha.200" }}
                 size={{ base: "sm", md: "md" }}
               >
                 <Bell size={20} />
+                {notification?.length > 0 && (
+                  <Box
+                    position="absolute"
+                    top="0"
+                    right="0"
+                    bg="red.500"
+                    color="white"
+                    fontSize="10px"
+                    fontWeight="bold"
+                    borderRadius="full"
+                    h="16px"
+                    w="16px"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    {notification.length}
+                  </Box>
+                )}
               </Button>
             </MenuTrigger>
 
             <MenuContent
               zIndex="2000"
               bg="rgba(15, 15, 15, 0.95)"
-              border="1px solid rgba(255, 255, 255, 0.1)"
-              borderRadius="md"
+              border="1px solid rgba(255, 255, 255, 0.08)"
+              borderRadius="lg"
               boxShadow="dark-lg"
               p={2}
               position="absolute"
               top="100%"
+              minW="260px"
+              maxH="350px"
+              overflowY="auto"
             >
-              <MenuItem
-                value="empty"
-                _hover={{ bg: "whiteAlpha.200" }}
-                cursor="pointer"
-              >
-                No new notifications
-              </MenuItem>
+              {!notification?.length && (
+                <Flex
+                  direction="column"
+                  align="center"
+                  justify="center"
+                  py={4}
+                  px={2}
+                >
+                  <Bell
+                    size={24}
+                    color="#4A5568"
+                    style={{ marginBottom: "8px" }}
+                  />
+                  <Text fontSize="sm" color="whiteAlpha.500" fontWeight="500">
+                    No new notifications
+                  </Text>
+                </Flex>
+              )}
+
+              {notification?.length > 0 && (
+                <Flex
+                  justify="space-between"
+                  align="center"
+                  px={2}
+                  pb={2}
+                  mb={1}
+                  borderBottom="1px solid rgba(255,255,255,0.08)"
+                >
+                  <Text fontSize="xs" color="whiteAlpha.600" fontWeight="600">
+                    NOTIFICATIONS
+                  </Text>
+                  <Text
+                    fontSize="xs"
+                    color="blue.300"
+                    fontWeight="600"
+                    cursor="pointer"
+                    _hover={{ color: "blue.200", textDecoration: "underline" }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setNotification([]);
+                    }}
+                  >
+                    Clear All
+                  </Text>
+                </Flex>
+              )}
+
+              {notification?.map((notif) => (
+                <MenuItem
+                  key={notif._id}
+                  value={notif._id}
+                  _hover={{ bg: "whiteAlpha.100" }}
+                  cursor="pointer"
+                  px={3}
+                  py={2}
+                  mb={1}
+                  borderRadius="md"
+                  onClick={() => {
+                    setSelectedChat(notif.chat);
+                    setNotification(notification.filter((n) => n !== notif));
+                  }}
+                >
+                  <Flex align="center" gap={3} w="100%">
+                    <Box
+                      bg="whiteAlpha.200"
+                      borderRadius="full"
+                      boxSize="36px"
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      flexShrink={0}
+                      overflow="hidden"
+                    >
+                      {notif.chat.isGroupChat ? (
+                        <Users size={18} color="#A0AEC0" />
+                      ) : (
+                        <Image
+                          src={
+                            getSenderPic(user, notif.chat.users) ||
+                            `https://ui-avatars.com/api/?name=${encodeURIComponent(getSender(user, notif.chat.users))}&background=random&color=fff`
+                          }
+                          boxSize="100%"
+                          objectFit="cover"
+                          alt="avatar"
+                        />
+                      )}
+                    </Box>
+                    <Box flex="1" overflow="hidden">
+                      <Text
+                        fontSize="sm"
+                        fontWeight="600"
+                        color="whiteAlpha.900"
+                        isTruncated
+                      >
+                        {notif.chat.isGroupChat
+                          ? notif.chat.chatName
+                          : getSender(user, notif.chat.users)}
+                      </Text>
+                      <Text fontSize="xs" color="whiteAlpha.600" isTruncated>
+                        {notif.chat.isGroupChat
+                          ? "New message in group"
+                          : "Sent you a message"}
+                      </Text>
+                    </Box>
+                    <Box
+                      w="8px"
+                      h="8px"
+                      borderRadius="full"
+                      bg="blue.400"
+                      flexShrink={0}
+                    />
+                  </Flex>
+                </MenuItem>
+              ))}
             </MenuContent>
           </MenuRoot>
 
-          {/* Profile Menu */}
+          {/* ---- PROFILE MENU ---- */}
           <MenuRoot>
             <MenuTrigger asChild>
               <Button
@@ -250,14 +379,10 @@ const SideDrawer = () => {
                     borderRadius="full"
                     src={
                       user?.pic ||
-                      `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                        user?.name || "User",
-                      )}&background=random&color=fff`
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || "User")}&background=random&color=fff`
                     }
                     onError={(e) => {
-                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                        user?.name || "User",
-                      )}&background=random&color=fff`;
+                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || "User")}&background=random&color=fff`;
                     }}
                     alt={user?.name || "Profile"}
                     cursor="pointer"
@@ -310,7 +435,7 @@ const SideDrawer = () => {
         </Box>
       </Box>
 
-      {/* drawer component */}
+      {/* ---- DRAWER COMPONENT ---- */}
       <DrawerRoot
         open={isSearchOpen}
         onOpenChange={(e) => setIsSearchOpen(e.open)}
@@ -330,12 +455,35 @@ const SideDrawer = () => {
           w={{ base: "100%", sm: "100%", md: "400px" }}
           maxW="100%"
         >
-          <DrawerHeader borderBottom="1px solid rgba(255,255,255,0.1)">
+          <DrawerHeader
+            borderBottom="1px solid rgba(255,255,255,0.1)"
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+            py={3}
+          >
             <DrawerTitle>Search Users</DrawerTitle>
-            <DrawerCloseTrigger color="gray.400" _hover={{ color: "white" }} />
+            <DrawerCloseTrigger asChild>
+              <IconButton
+                aria-label="Close"
+                variant="ghost"
+                color="whiteAlpha.800"
+                size="md"
+                _hover={{ bg: "whiteAlpha.200", color: "white" }}
+                onClick={() => setIsSearchOpen(false)}
+              >
+                <X size={24} />
+              </IconButton>
+            </DrawerCloseTrigger>
           </DrawerHeader>
 
-          <DrawerBody pt={{ base: 3, md: 4 }} px={{ base: 3, md: 4 }}>
+          <DrawerBody
+            pt={{ base: 3, md: 4 }}
+            px={{ base: 3, md: 4 }}
+            display="flex"
+            flexDir="column"
+          >
+            {/* Search Input Area */}
             <Box
               display="flex"
               gap={{ base: 1.5, md: 2 }}
@@ -353,18 +501,33 @@ const SideDrawer = () => {
                 size={{ base: "sm", md: "md" }}
                 _focus={{ border: "1px solid white", outline: "none" }}
               />
-              <Button
-                onClick={handleSearch}
-                bg="white"
-                color="black"
-                _hover={{ bg: "gray.200" }}
-                size={{ base: "sm", md: "md" }}
-                minW={{ base: "100%", sm: "auto" }}
-              >
-                Go
-              </Button>
+              <Flex gap={2}>
+                <Button
+                  onClick={handleSearch}
+                  bg="white"
+                  color="black"
+                  _hover={{ bg: "gray.200" }}
+                  size={{ base: "sm", md: "md" }}
+                  flex="1"
+                >
+                  Go
+                </Button>
+                {/* Mobile-only secondary close button */}
+                <Button
+                  display={{ base: "flex", sm: "none" }}
+                  onClick={() => setIsSearchOpen(false)}
+                  variant="outline"
+                  color="whiteAlpha.800"
+                  borderColor="whiteAlpha.400"
+                  size="sm"
+                  flex="1"
+                >
+                  Cancel
+                </Button>
+              </Flex>
             </Box>
 
+            {/* Loading / Results */}
             {loading ? (
               <Box mt={{ base: 3, md: 4 }}>
                 <ChatLoading />
@@ -391,6 +554,19 @@ const SideDrawer = () => {
                 <Spinner color="white" />
               </Box>
             )}
+
+            {/* ---- MADE BY CREDITS ---- */}
+            <Flex
+              align="center"
+              justify="center"
+              p={3}
+              borderTop="1px solid rgba(255,255,255,0.08)"
+              mt="auto"
+            >
+              <Text fontSize="xs" color="whiteAlpha.400">
+                © {new Date().getFullYear()} • By Shrey
+              </Text>
+            </Flex>
           </DrawerBody>
         </DrawerContent>
       </DrawerRoot>

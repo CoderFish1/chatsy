@@ -8,6 +8,7 @@ import {
   Image,
   Spinner,
 } from "@chakra-ui/react";
+import { Textarea } from "@chakra-ui/react";
 import io from "socket.io-client";
 import { Send, ArrowLeft, Settings, Users } from "lucide-react"; // Removed 'Divide' as it wasn't used
 import { ChatState } from "../../context/ChatProvider";
@@ -22,7 +23,7 @@ import TypingIndicator from "./TypingIndicator";
 const ENDPOINT = "http://localhost:5000";
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
-  const { user, selectedChat, setSelectedChat } = ChatState();
+  const { user, selectedChat, setSelectedChat, notification, setNotification } = ChatState();
 
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -87,26 +88,47 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedChat]);
 
-  useEffect(() => {
-    if (!socket.current) return;
+ useEffect(() => {
+   if (!socket.current) return;
 
-    const handleMessageReceived = (newMessageReceived) => {
-      if (
-        !selectedChatCompare.current ||
-        selectedChatCompare.current._id !== newMessageReceived.chat._id
-      ) {
-        // notification logic here
-      } else {
-        setMessages((prevMessages) => [...prevMessages, newMessageReceived]);
-      }
-    };
+  const handleMessageReceived = (newMessageReceived) => {
+    if (
+      !selectedChatCompare.current ||
+      selectedChatCompare.current._id !== newMessageReceived.chat._id
+    ) {
+      setNotification((prevNotification) => {
+        const existingIndex = prevNotification.findIndex(
+          (n) => n.chat._id === newMessageReceived.chat._id,
+        );
 
-    socket.current.on("message received", handleMessageReceived);
+        if (existingIndex !== -1) {
+          // Same chat already has a notification — update it, don't stack
+          const updated = [...prevNotification];
+          updated[existingIndex] = {
+            ...newMessageReceived,
+            count: (updated[existingIndex].count || 1) + 1,
+          };
+          // move it to the top
+          const [moved] = updated.splice(existingIndex, 1);
+          return [moved, ...updated];
+        }
 
-    return () => {
-      socket.current?.off("message received", handleMessageReceived);
-    };
-  }, []);
+        // New chat — add fresh entry
+        return [{ ...newMessageReceived, count: 1 }, ...prevNotification];
+      });
+
+      setFetchAgain((prev) => !prev);
+    } else {
+      setMessages((prevMessages) => [...prevMessages, newMessageReceived]);
+    }
+  };
+
+   socket.current.on("message received", handleMessageReceived);
+
+   return () => {
+     socket.current?.off("message received", handleMessageReceived);
+   };
+ }, []);
 
   const handleSendMessage = async () => {
     if (!newMessage) return;
@@ -147,13 +169,12 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
+ const handleKeyDown = (e) => {
+   if (e.key === "Enter" && !e.shiftKey) {
+     e.preventDefault();
+     handleSendMessage();
+   }
+ };
   const typingHandler = (e) => {
     setNewMessage(e.target.value);
 
@@ -289,6 +310,33 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                 color="whiteAlpha.700"
                 thickness="4px"
               />
+            ) : messages.length === 0 ? (
+              <Flex
+                flexDir="column"
+                justify="center"
+                align="center"
+                h="100%"
+                gap={2}
+                color="whiteAlpha.500"
+              >
+                <Text fontSize="3xl">👋</Text>
+                <Text fontSize="md" fontWeight="500">
+                  {selectedChat.isGroup
+                    ? `Say hi to everyone in ${selectedChat.chatName}!`
+                    : `Say hi to ${getSender(user, selectedChat.users)}!`}
+                </Text>
+                <Text fontSize="sm" color="whiteAlpha.400">
+                  No messages yet — start the conversation.
+                </Text>
+                <Text
+                  color="whiteAlpha.400"
+                  fontSize="sm"
+                  mt={10}
+                  fontWeight="500"
+                >
+                  Designed & Built by Shrey
+                </Text>
+              </Flex>
             ) : (
               <Flex flexDir="column" overflowY="auto" h="100%" pb={2}>
                 <ScrollableChat messages={messages} />
@@ -311,7 +359,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
               )}
 
               {/* Main Input */}
-              <Input
+              <Textarea
                 onKeyDown={handleKeyDown}
                 onChange={typingHandler}
                 value={newMessage}
@@ -325,7 +373,12 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                 }}
                 color="white"
                 placeholder="Type a message..."
-                pr="3rem" // Space for the send button
+                pr="3rem"
+                resize="none"
+                rows={1}
+                overflow="hidden"
+                minH="40px"
+                maxH="120px"
               />
 
               {/* Send Button */}

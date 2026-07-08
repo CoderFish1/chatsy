@@ -119,6 +119,31 @@ const Home = () => {
           </Tabs.Content>
         </Tabs.Root>
       </Box>
+
+      {/* --- BRAND SIGNATURE TAG --- */}
+      <Box
+        position="fixed"
+        bottom="24px"
+        right="28px"
+        transform="rotate(-8deg)"
+        zIndex={1}
+        pointerEvents="none"
+      >
+        <Text
+          style={{
+            fontFamily: "'Caveat', cursive",
+            fontSize: "34px",
+            fontWeight: 700,
+            letterSpacing: "0.5px",
+            background: "linear-gradient(to right, #f472b6, #a78bfa, #60a5fa)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            filter: "drop-shadow(0 2px 8px rgba(167, 139, 250, 0.35))",
+          }}
+        >
+          ~ shrey made this
+        </Text>
+      </Box>
     </Box>
   );
 };
