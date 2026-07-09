@@ -17,19 +17,21 @@ import { Server } from "socket.io";
 
 const app = express();
 
-const getAllowedOrigins = () => [
+// Hardcoded production URL + optional override via env var
+const ALLOWED_ORIGINS = [
   "http://localhost:5173",
-  process.env.CLIENT_URL, // ← the FRONTEND's URL (e.g. Vercel)
+  "https://chatsy-ochre.vercel.app", // production frontend
+  process.env.CLIENT_URL,            // optional extra override
 ].filter(Boolean);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      const allowed = getAllowedOrigins();
-      if (!origin || allowed.includes(origin)) {
+      if (!origin || ALLOWED_ORIGINS.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error(`CORS blocked: ${origin}`));
+        console.log("CORS blocked origin:", origin);
+        callback(null, false);
       }
     },
     credentials: true,
@@ -62,11 +64,10 @@ const io = new Server(server, {
   pingTimeout: 60000,
   cors: {
     origin: (origin, callback) => {
-      const allowed = getAllowedOrigins();
-      if (!origin || allowed.includes(origin)) {
+      if (!origin || ALLOWED_ORIGINS.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error(`CORS blocked: ${origin}`));
+        callback(null, false);
       }
     },
     credentials: true,
