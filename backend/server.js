@@ -27,7 +27,13 @@ const ALLOWED_ORIGINS = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+      // Allow localhost, the exact production URL, explicit env URL, or ANY vercel preview URL
+      const isAllowed = 
+        !origin || 
+        ALLOWED_ORIGINS.includes(origin) ||
+        origin.endsWith(".vercel.app");
+
+      if (isAllowed) {
         callback(null, true);
       } else {
         console.log("CORS blocked origin:", origin);
@@ -64,7 +70,12 @@ const io = new Server(server, {
   pingTimeout: 60000,
   cors: {
     origin: (origin, callback) => {
-      if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+      const isAllowed = 
+        !origin || 
+        ALLOWED_ORIGINS.includes(origin) ||
+        origin.endsWith(".vercel.app");
+        
+      if (isAllowed) {
         callback(null, true);
       } else {
         callback(null, false);
