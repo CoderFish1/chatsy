@@ -10,7 +10,7 @@ const Chat = () => {
   const [fetchAgain, setFetchAgain] = useState(false);
 
   return (
-    <Box w="100vw" h="100vh" overflow="hidden">
+    <Box w="100vw" h="100dvh" overflow="hidden">
       {user && <SideDrawer />}
 
       {user && (

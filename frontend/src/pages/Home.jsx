@@ -18,11 +18,12 @@ const Home = () => {
   return (
     <Box
       w="100vw"
-      h="100vh"
+      h="100dvh"
       display="flex"
       flexDirection="column"
       alignItems="center"
       justifyContent="center"
+      overflow="hidden"
       bg="transparent"
     >
       {/* --- HERO TYPOGRAPHY START --- */}
@@ -55,7 +56,7 @@ const Home = () => {
       <Box
         w="400px"
         maxW="90vw"
-        maxH="85vh"
+        maxH={{ base: "80dvh", md: "85vh" }}
         overflowY="auto"
         bg="#0a0a0a"
         borderRadius="2xl"
