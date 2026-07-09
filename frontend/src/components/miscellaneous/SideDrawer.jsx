@@ -18,7 +18,7 @@ import { toaster } from "../ui/toaster";
 import ChatLoading from "./ChatLoading";
 import UserListItem from "./UserListItem";
 import axios from "axios";
-import { getSender, getSenderPic } from "../../config/ChatLogics";
+import { getSender, getSenderPic, getChatId } from "../../config/ChatLogics";
 
 // drawer components
 import {
@@ -45,6 +45,11 @@ const SideDrawer = () => {
     notification,
     setNotification,
   } = ChatState();
+
+  const totalUnread = notification?.reduce(
+    (sum, notif) => sum + (notif.count || 1),
+    0,
+  ) ?? 0;
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -207,7 +212,7 @@ const SideDrawer = () => {
                 size={{ base: "sm", md: "md" }}
               >
                 <Bell size={20} />
-                {notification?.length > 0 && (
+                {totalUnread > 0 && (
                   <Box
                     position="absolute"
                     top="0"
@@ -217,13 +222,14 @@ const SideDrawer = () => {
                     fontSize="10px"
                     fontWeight="bold"
                     borderRadius="full"
+                    minW="16px"
                     h="16px"
-                    w="16px"
+                    px={totalUnread > 9 ? 1 : 0}
                     display="flex"
                     alignItems="center"
                     justifyContent="center"
                   >
-                    {notification.length}
+                    {totalUnread > 99 ? "99+" : totalUnread}
                   </Box>
                 )}
               </Button>
@@ -289,10 +295,14 @@ const SideDrawer = () => {
                 </Flex>
               )}
 
-              {notification?.map((notif) => (
+              {notification?.map((notif) => {
+                const count = notif.count || 1;
+                const isGroup = notif.chat?.isGroup;
+
+                return (
                 <MenuItem
-                  key={notif._id}
-                  value={notif._id}
+                  key={getChatId(notif)}
+                  value={getChatId(notif)}
                   _hover={{ bg: "whiteAlpha.100" }}
                   cursor="pointer"
                   px={3}
@@ -301,7 +311,9 @@ const SideDrawer = () => {
                   borderRadius="md"
                   onClick={() => {
                     setSelectedChat(notif.chat);
-                    setNotification(notification.filter((n) => n !== notif));
+                    setNotification(
+                      notification.filter((n) => getChatId(n) !== getChatId(notif)),
+                    );
                   }}
                 >
                   <Flex align="center" gap={3} w="100%">
@@ -315,7 +327,7 @@ const SideDrawer = () => {
                       flexShrink={0}
                       overflow="hidden"
                     >
-                      {notif.chat.isGroupChat ? (
+                      {isGroup ? (
                         <Users size={18} color="#A0AEC0" />
                       ) : (
                         <Image
@@ -336,26 +348,48 @@ const SideDrawer = () => {
                         color="whiteAlpha.900"
                         isTruncated
                       >
-                        {notif.chat.isGroupChat
+                        {isGroup
                           ? notif.chat.chatName
                           : getSender(user, notif.chat.users)}
                       </Text>
                       <Text fontSize="xs" color="whiteAlpha.600" isTruncated>
-                        {notif.chat.isGroupChat
-                          ? "New message in group"
-                          : "Sent you a message"}
+                        {count > 1
+                          ? `${count} new messages`
+                          : isGroup
+                            ? "New message in group"
+                            : "Sent you a message"}
                       </Text>
                     </Box>
-                    <Box
-                      w="8px"
-                      h="8px"
-                      borderRadius="full"
-                      bg="blue.400"
-                      flexShrink={0}
-                    />
+                    {count > 1 ? (
+                      <Box
+                        bg="red.500"
+                        color="white"
+                        fontSize="10px"
+                        fontWeight="bold"
+                        borderRadius="full"
+                        minW="18px"
+                        h="18px"
+                        px={1}
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        flexShrink={0}
+                      >
+                        {count}
+                      </Box>
+                    ) : (
+                      <Box
+                        w="8px"
+                        h="8px"
+                        borderRadius="full"
+                        bg="blue.400"
+                        flexShrink={0}
+                      />
+                    )}
                   </Flex>
                 </MenuItem>
-              ))}
+              );
+              })}
             </MenuContent>
           </MenuRoot>
 

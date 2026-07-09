@@ -12,7 +12,7 @@ import { Textarea } from "@chakra-ui/react";
 import io from "socket.io-client";
 import { Send, ArrowLeft, Settings, Users } from "lucide-react"; // Removed 'Divide' as it wasn't used
 import { ChatState } from "../../context/ChatProvider";
-import { getSender, getSenderPic } from "../../config/ChatLogics";
+import { getSender, getSenderPic, getChatId } from "../../config/ChatLogics";
 import ProfileModalBox from "./ProfileModalBox";
 import UpdateGroupChatModal from "./UpdateGroupChatModal";
 import ScrollableChat from "./ScrollableChat";
@@ -91,28 +91,28 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
    if (!socket.current) return;
 
   const handleMessageReceived = (newMessageReceived) => {
+    const incomingChatId = getChatId(newMessageReceived);
+
     if (
       !selectedChatCompare.current ||
-      selectedChatCompare.current._id !== newMessageReceived.chat._id
+      getChatId(selectedChatCompare.current) !== incomingChatId
     ) {
       setNotification((prevNotification) => {
         const existingIndex = prevNotification.findIndex(
-          (n) => n.chat._id === newMessageReceived.chat._id,
+          (n) => getChatId(n) === incomingChatId,
         );
 
         if (existingIndex !== -1) {
-          // Same chat already has a notification — update it, don't stack
           const updated = [...prevNotification];
+          const prevCount = updated[existingIndex].count || 1;
           updated[existingIndex] = {
             ...newMessageReceived,
-            count: (updated[existingIndex].count || 1) + 1,
+            count: prevCount + 1,
           };
-          // move it to the top
           const [moved] = updated.splice(existingIndex, 1);
           return [moved, ...updated];
         }
 
-        // New chat — add fresh entry
         return [{ ...newMessageReceived, count: 1 }, ...prevNotification];
       });
 

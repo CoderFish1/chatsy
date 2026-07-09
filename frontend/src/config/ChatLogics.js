@@ -57,3 +57,13 @@ export const isSameSenderMargin = (messages, m, i, userId) => {
 export const isSameUser = (messages, m, i) => {
   return i > 0 && messages[i - 1].sender._id === m.sender._id;
 };
+
+export const getChatId = (item) => {
+  if (!item) return "";
+  if (item.chat) {
+    const chat = item.chat;
+    return String(typeof chat === "object" ? chat._id : chat);
+  }
+  if (item._id) return String(item._id);
+  return "";
+};
