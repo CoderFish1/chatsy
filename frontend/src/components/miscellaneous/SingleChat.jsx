@@ -19,8 +19,7 @@ import ScrollableChat from "./ScrollableChat";
 import { toaster } from "../ui/toaster";
 import axios from "axios";
 import TypingIndicator from "./TypingIndicator";
-
-const ENDPOINT = "http://localhost:5000";
+import { API_URL } from "../../config/api";
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const { user, selectedChat, setSelectedChat, notification, setNotification } = ChatState();
@@ -37,7 +36,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   useEffect(() => {
     if (!user) return;
 
-    socket.current = io(ENDPOINT);
+    socket.current = io(API_URL);
     socket.current.emit("setup", user);
     socket.current.on("connected", () => setsocketConnected(true));
 

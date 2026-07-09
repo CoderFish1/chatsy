@@ -17,7 +17,17 @@ import { Server } from "socket.io";
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.CLIENT_URL, // / ← the FRONTEND's URL (e.g. Vercel)
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  }),
+);
 
 connectDB();
 
@@ -44,7 +54,8 @@ const server = app.listen(
 const io = new Server(server, {
   pingTimeout: 60000,
   cors: {
-    origin: "http://localhost:5173",
+    origin: allowedOrigins,
+    credentials: true,
   },
 });
 
