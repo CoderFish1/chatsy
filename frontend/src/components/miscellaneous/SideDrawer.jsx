@@ -180,13 +180,24 @@ const SideDrawer = () => {
           </Button>
         </Box>
 
-        {/* Center Column: Title */}
-        <Box flex="1" display="flex" justifyContent="center">
+        {/* Center: Chatsy logo — true page center */}
+        <Box
+          position="absolute"
+          left="50%"
+          top="50%"
+          transform="translate(-50%, -50%)"
+          pointerEvents="none"
+          zIndex={0}
+        >
           <Text
-            fontSize={{ base: "lg", sm: "xl", md: "2xl" }}
-            fontFamily="Plus Jakarta Sans, system-ui, sans-serif"
-            fontWeight="bold"
-            letterSpacing="wide"
+            fontFamily="'Outfit', system-ui, sans-serif"
+            fontSize={{ base: "1.35rem", md: "1.6rem" }}
+            fontWeight="500"
+            letterSpacing="0.14em"
+            textTransform="uppercase"
+            color="white"
+            lineHeight="1"
+            opacity={0.95}
           >
             Chatsy
           </Text>
@@ -300,95 +311,97 @@ const SideDrawer = () => {
                 const isGroup = notif.chat?.isGroup;
 
                 return (
-                <MenuItem
-                  key={getChatId(notif)}
-                  value={getChatId(notif)}
-                  _hover={{ bg: "whiteAlpha.100" }}
-                  cursor="pointer"
-                  px={3}
-                  py={2}
-                  mb={1}
-                  borderRadius="md"
-                  onClick={() => {
-                    setSelectedChat(notif.chat);
-                    setNotification(
-                      notification.filter((n) => getChatId(n) !== getChatId(notif)),
-                    );
-                  }}
-                >
-                  <Flex align="center" gap={3} w="100%">
-                    <Box
-                      bg="whiteAlpha.200"
-                      borderRadius="full"
-                      boxSize="36px"
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      flexShrink={0}
-                      overflow="hidden"
-                    >
-                      {isGroup ? (
-                        <Users size={18} color="#A0AEC0" />
-                      ) : (
-                        <Image
-                          src={
-                            getSenderPic(user, notif.chat.users) ||
-                            `https://ui-avatars.com/api/?name=${encodeURIComponent(getSender(user, notif.chat.users))}&background=random&color=fff`
-                          }
-                          boxSize="100%"
-                          objectFit="cover"
-                          alt="avatar"
-                        />
-                      )}
-                    </Box>
-                    <Box flex="1" overflow="hidden">
-                      <Text
-                        fontSize="sm"
-                        fontWeight="600"
-                        color="whiteAlpha.900"
-                        isTruncated
-                      >
-                        {isGroup
-                          ? notif.chat.chatName
-                          : getSender(user, notif.chat.users)}
-                      </Text>
-                      <Text fontSize="xs" color="whiteAlpha.600" isTruncated>
-                        {count > 1
-                          ? `${count} new messages`
-                          : isGroup
-                            ? "New message in group"
-                            : "Sent you a message"}
-                      </Text>
-                    </Box>
-                    {count > 1 ? (
+                  <MenuItem
+                    key={getChatId(notif)}
+                    value={getChatId(notif)}
+                    _hover={{ bg: "whiteAlpha.100" }}
+                    cursor="pointer"
+                    px={3}
+                    py={2}
+                    mb={1}
+                    borderRadius="md"
+                    onClick={() => {
+                      setSelectedChat(notif.chat);
+                      setNotification(
+                        notification.filter(
+                          (n) => getChatId(n) !== getChatId(notif),
+                        ),
+                      );
+                    }}
+                  >
+                    <Flex align="center" gap={3} w="100%">
                       <Box
-                        bg="red.500"
-                        color="white"
-                        fontSize="10px"
-                        fontWeight="bold"
+                        bg="whiteAlpha.200"
                         borderRadius="full"
-                        minW="18px"
-                        h="18px"
-                        px={1}
+                        boxSize="36px"
                         display="flex"
                         alignItems="center"
                         justifyContent="center"
                         flexShrink={0}
+                        overflow="hidden"
                       >
-                        {count}
+                        {isGroup ? (
+                          <Users size={18} color="#A0AEC0" />
+                        ) : (
+                          <Image
+                            src={
+                              getSenderPic(user, notif.chat.users) ||
+                              `https://ui-avatars.com/api/?name=${encodeURIComponent(getSender(user, notif.chat.users))}&background=random&color=fff`
+                            }
+                            boxSize="100%"
+                            objectFit="cover"
+                            alt="avatar"
+                          />
+                        )}
                       </Box>
-                    ) : (
-                      <Box
-                        w="8px"
-                        h="8px"
-                        borderRadius="full"
-                        bg="blue.400"
-                        flexShrink={0}
-                      />
-                    )}
-                  </Flex>
-                </MenuItem>
-              );
+                      <Box flex="1" overflow="hidden">
+                        <Text
+                          fontSize="sm"
+                          fontWeight="600"
+                          color="whiteAlpha.900"
+                          isTruncated
+                        >
+                          {isGroup
+                            ? notif.chat.chatName
+                            : getSender(user, notif.chat.users)}
+                        </Text>
+                        <Text fontSize="xs" color="whiteAlpha.600" isTruncated>
+                          {count > 1
+                            ? `${count} new messages`
+                            : isGroup
+                              ? "New message in group"
+                              : "Sent you a message"}
+                        </Text>
+                      </Box>
+                      {count > 1 ? (
+                        <Box
+                          bg="red.500"
+                          color="white"
+                          fontSize="10px"
+                          fontWeight="bold"
+                          borderRadius="full"
+                          minW="18px"
+                          h="18px"
+                          px={1}
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="center"
+                          flexShrink={0}
+                        >
+                          {count}
+                        </Box>
+                      ) : (
+                        <Box
+                          w="8px"
+                          h="8px"
+                          borderRadius="full"
+                          bg="blue.400"
+                          flexShrink={0}
+                        />
+                      )}
+                    </Flex>
+                  </MenuItem>
+                );
               })}
             </MenuContent>
           </MenuRoot>
