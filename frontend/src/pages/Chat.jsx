@@ -15,7 +15,7 @@ const Chat = () => {
 
       {user && (
         <Box
-          h={{ base: "calc(100vh - 60px)", md: "calc(100vh - 70px)" }}
+          h={{ base: "calc(100dvh - 60px)", md: "calc(100dvh - 70px)" }}
           p={{ base: 2, md: 4 }}
         >
           <Grid
