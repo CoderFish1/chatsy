@@ -17,14 +17,21 @@ import { Server } from "socket.io";
 
 const app = express();
 
-const allowedOrigins = [
+const getAllowedOrigins = () => [
   "http://localhost:5173",
-  process.env.CLIENT_URL, // / ← the FRONTEND's URL (e.g. Vercel)
+  process.env.CLIENT_URL, // ← the FRONTEND's URL (e.g. Vercel)
 ].filter(Boolean);
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      const allowed = getAllowedOrigins();
+      if (!origin || allowed.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked: ${origin}`));
+      }
+    },
     credentials: true,
   }),
 );
@@ -54,7 +61,14 @@ const server = app.listen(
 const io = new Server(server, {
   pingTimeout: 60000,
   cors: {
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      const allowed = getAllowedOrigins();
+      if (!origin || allowed.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked: ${origin}`));
+      }
+    },
     credentials: true,
   },
 });
